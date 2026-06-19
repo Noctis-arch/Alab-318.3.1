@@ -3,20 +3,27 @@ const router = express.Router();
 
 import posts from '../data/posts.js';
 import error from '../utilities/error.js';
+import comments from "../data/comments.js";
 
 router
   .route("/")
   .get((req, res) => {
-    const links = [
-      {
-        href: "posts/:id",
-        rel: ":id",
-        type: "GET",
-      },
-    ];
+  let results = posts;
 
-    res.json({ posts, links });
-  })
+  if (req.query.userId) {
+    results = results.filter((p) => p.userId == req.query.userId);
+  }
+
+  const links = [
+    {
+      href: "posts/:id",
+      rel: ":id",
+      type: "GET",
+    },
+  ];
+
+  res.json({ posts: results, links });
+})
   .post((req, res, next) => {
     if (req.body.userId && req.body.title && req.body.content) {
       const post = {
@@ -76,5 +83,19 @@ router
     if (post) res.json(post);
     else next();
   });
+
+  router.get("/:id/comments", (req, res, next) => {
+  let results = comments.filter((c) => c.postId == req.params.id);
+
+  if (req.query.userId) {
+    results = results.filter((c) => c.userId == req.query.userId);
+  }
+
+  if (results.length > 0) {
+    res.json({ comments: results });
+  } else {
+    next();
+  }
+});
 
 export default router
